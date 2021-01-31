@@ -128,7 +128,7 @@ module Dalli
     end
 
     def set(key, value, ttl = nil, options = nil)
-      perform(:set, key, value, ttl_or_default(ttl), 0, options)
+      perform(:set, key, value, ttl_or_default(ttl), nil, options)
     end
 
     ##
@@ -142,11 +142,11 @@ module Dalli
     # Conditionally add a key/value pair, only if the key already exists
     # on the server.  Returns truthy if the operation succeeded.
     def replace(key, value, ttl = nil, options = nil)
-      perform(:replace, key, value, ttl_or_default(ttl), 0, options)
+      perform(:replace, key, value, ttl_or_default(ttl), nil, options)
     end
 
     def delete(key)
-      perform(:delete, key, 0)
+      perform(:delete, key, nil)
     end
 
     ##

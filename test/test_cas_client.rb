@@ -69,10 +69,35 @@ describe "Dalli::Cas::Client" do
       end
     end
 
+    it "supports replace-with-CAS operation within multi" do
+      memcached_persistent do |dc|
+        dc.flush
+        cas = dc.set("key", "value")
+
+        # Accepts CAS, replaces, and returns new CAS
+        dc.multi do
+          cas = dc.replace_cas("key", "value2", cas)
+          assert cas.is_a?(Integer)
+        end
+
+        assert_equal "value2", dc.get("key")
+      end
+    end
+
     it "supports delete with CAS" do
       memcached_persistent do |dc|
         cas = dc.set("some_key", "some_value")
         dc.delete_cas("some_key", cas)
+        assert_nil dc.get("some_key")
+      end
+    end
+
+    it "supports delete with CAS within multi" do
+      memcached_persistent do |dc|
+        cas = dc.set("some_key", "some_value")
+        dc.multi do
+          dc.delete_cas("some_key", cas)
+        end
         assert_nil dc.get("some_key")
       end
     end

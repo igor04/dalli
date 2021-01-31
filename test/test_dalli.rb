@@ -280,6 +280,27 @@ describe "Dalli" do
       end
     end
 
+    it "support the cas operation within multi" do
+      memcached_persistent do |dc|
+        dc.flush
+
+        expected = {"blah" => "blerg!"}
+        mutated = {"blah" => "foo!"}
+        dc.set("cas_key", expected)
+
+        dc.multi do
+          resp = dc.cas("cas_key") { |value|
+              assert_equal expected, value
+              mutated
+          }
+          assert op_cas_succeeds(resp)
+        end
+
+        resp = dc.get("cas_key")
+        assert_equal mutated, resp
+      end
+    end
+
     it "support the cas! operation" do
       memcached_persistent do |dc|
         dc.flush
@@ -290,6 +311,24 @@ describe "Dalli" do
           mutated
         }
         assert op_cas_succeeds(resp)
+
+        resp = dc.get("cas_key")
+        assert_equal mutated, resp
+      end
+    end
+
+    it "support the cas! operation within multi" do
+      memcached_persistent do |dc|
+        dc.flush
+
+        mutated = {"blah" => "foo!"}
+        dc.multi do
+          resp = dc.cas!("cas_key") { |value|
+            assert_nil value
+            mutated
+          }
+          assert op_cas_succeeds(resp)
+        end
 
         resp = dc.get("cas_key")
         assert_equal mutated, resp
